@@ -143,68 +143,60 @@ class PeriodicBoundary(Boundary):
     ):
         super()._register_grid(grid=grid, x=x, y=y, z=z)
 
-        if self.x == 0 or self.x == -1:
-            self.__class__ = _PeriodicBoundaryX  # subclass of PeriodicBoundary
-            if hasattr(grid, "_xlow_boundary") or hasattr(grid, "_xhigh_boundary"):
-                raise AttributeError("grid already has an xlow/xhigh boundary!")
-            setattr(grid, "_xlow_boundary", self)
-            setattr(grid, "_xhigh_boundary", self)
-        elif self.y == 0 or self.y == -1:
-            self.__class__ = _PeriodicBoundaryY  # subclass of PeriodicBoundary
-            if hasattr(grid, "_ylow_boundary") or hasattr(grid, "_yhigh_boundary"):
-                raise AttributeError("grid already has an ylow/yhigh boundary!")
-            setattr(grid, "_ylow_boundary", self)
-            setattr(grid, "_yhigh_boundary", self)
-        elif self.z == 0 or self.z == -1:
-            self.__class__ = _PeriodicBoundaryZ  # subclass of PeriodicBoundary
-            if hasattr(grid, "_zlow_boundary") or hasattr(grid, "_zhigh_boundary"):
-                raise AttributeError("grid already has an zlow/zhigh boundary!")
-            setattr(grid, "_zlow_boundary", self)
-            setattr(grid, "_zhigh_boundary", self)
+        valid_bounds = [0, -1]
+        axis = None
+
+        if self.x in valid_bounds:
+            axis = "x"
+        elif self.y in valid_bounds:
+            axis = "y"
+        elif self.z in valid_bounds:
+            axis = "z"
         else:
             raise IndexError(
                 "A periodic boundary should be placed at the boundary of the "
                 "grid using a single index (either 0 or -1)"
             )
 
+        self.__class__ = _set_periodic_boundary(axis)
+        self.attach_to_grid(grid, axis)
 
-# Periodic Boundaries in the X-direction
-class _PeriodicBoundaryX(PeriodicBoundary):
-    def update_E(self):
-        """Update electric field such that periodic boundary conditions in the
-        X-direction apply"""
-        self.grid.E[0, :, :, :] = self.grid.E[-1, :, :, :]
+    def attach_to_grid(self, grid, axis):
+        low_bound = f"_{axis}low_boundary"
+        high_bound = f"_{axis}high_boundary"
 
-    def update_H(self):
-        """Update magnetic field such that periodic boundary conditions in the
-        X-directions apply"""
-        self.grid.H[-1, :, :, :] = self.grid.H[0, :, :, :]
-
-
-# Periodic Boundaries in the Y-direction
-class _PeriodicBoundaryY(PeriodicBoundary):
-    def update_E(self):
-        """Update electric field such that periodic boundary conditions in the
-        Y-direction apply"""
-        self.grid.E[:, 0, :, :] = self.grid.E[:, -1, :, :]
-
-    def update_H(self):
-        """Update magnetic field such that periodic boundary conditions in the
-        Y-direction apply"""
-        self.grid.H[:, -1, :, :] = self.grid.H[:, 0, :, :]
+        if hasattr(grid, low_bound) or hasattr(grid, high_bound):
+            raise AttributeError("grid already has low/high boundary")
+        setattr(grid, low_bound, self)
+        setattr(grid, high_bound, self)
 
 
-# Periodic Boundaries in the Z-direction
-class _PeriodicBoundaryZ(PeriodicBoundary):
-    def update_E(self):
-        """Update electric field such that periodic boundary conditions in the
-        Z-direction apply"""
-        self.grid.E[:, :, 0, :] = self.grid.E[:, :, -1, :]
+def _set_periodic_boundary(axis):
+    """Returns a periodic boundary object with regards to the axis:
+    Args:
+        axis: str -> Axis where the boundary will be created at
+    Returns:
+        _PB: PeriodicBoundary -> A periodic boundary object"""
+    axis_dict = {"x": 0, "y": 1, "z": 2}
 
-    def update_H(self):
-        """Update magnetic field such that periodic boundary conditions in the
-        Z-direction apply"""
-        self.grid.H[:, :, -1, :] = self.grid.H[:, :, 0, :]
+    # Create slices to calculate update equations for, taking axis into account.
+    slc = [
+        tuple(val if idx == axis_dict[axis] else slice(None) for idx in range(4))
+        for val in range(-1, 1)
+    ]
+
+    class _PB(PeriodicBoundary):
+        def update_E(self):
+            """Update electric field such that periodic boundary conditions in the
+            given direction apply"""
+            self.grid.E[slc[0]] = self.grid.E[slc[1]]
+
+        def update_H(self):
+            """Update magnetic field such that periodic boundary conditions in the
+            given directions apply"""
+            self.grid.H[slc[1]] = self.grid.H[slc[0]]
+
+    return _PB
 
 
 ## Perfectly Matched Layer (PML)
