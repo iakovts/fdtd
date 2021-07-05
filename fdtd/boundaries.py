@@ -18,10 +18,10 @@ from .backend import backend as bd
 
 ## Boundary Conditions [base class]
 class Boundary:
-    """ an FDTD Boundary [base class] """
+    """an FDTD Boundary [base class]"""
 
     def __init__(self, name: str = None):
-        """ Create a boundary
+        """Create a boundary
 
         Args:
             name: name of the boundary
@@ -32,7 +32,7 @@ class Boundary:
     def _register_grid(
         self, grid: Grid, x: ListOrSlice, y: ListOrSlice, z: ListOrSlice
     ):
-        """ Register a grid to the boundary
+        """Register a grid to the boundary
 
         Args:
             grid: the grid to register the boundary to
@@ -76,28 +76,28 @@ class Boundary:
         raise ValueError("Invalid grid indexing used for boundary")
 
     def update_phi_E(self):
-        """ Update convolution [phi_E]
+        """Update convolution [phi_E]
 
         Note:
             this method is called *before* the electric field is updated
         """
 
     def update_phi_H(self):
-        """ Update convolution [phi_H]
+        """Update convolution [phi_H]
 
         Note:
             this method is called *before* the magnetic field is updated
         """
 
     def update_E(self):
-        """ Update electric field of the grid
+        """Update electric field of the grid
 
         Note:
             this method is called *after* the grid fields are updated
         """
 
     def update_H(self):
-        """ Update magnetic field of the grid
+        """Update magnetic field of the grid
 
         Note:
             this method is called *after* the grid fields are updated
@@ -129,7 +129,7 @@ class Boundary:
 
 ## Periodic Boundaries
 class PeriodicBoundary(Boundary):
-    """ An FDTD Periodic Boundary
+    """An FDTD Periodic Boundary
 
     Note:
         Registering a periodic boundary to the grid will change the periodic
@@ -171,39 +171,39 @@ class PeriodicBoundary(Boundary):
 # Periodic Boundaries in the X-direction
 class _PeriodicBoundaryX(PeriodicBoundary):
     def update_E(self):
-        """ Update electric field such that periodic boundary conditions in the
-        X-direction apply """
+        """Update electric field such that periodic boundary conditions in the
+        X-direction apply"""
         self.grid.E[0, :, :, :] = self.grid.E[-1, :, :, :]
 
     def update_H(self):
-        """ Update magnetic field such that periodic boundary conditions in the
-        X-directions apply """
+        """Update magnetic field such that periodic boundary conditions in the
+        X-directions apply"""
         self.grid.H[-1, :, :, :] = self.grid.H[0, :, :, :]
 
 
 # Periodic Boundaries in the Y-direction
 class _PeriodicBoundaryY(PeriodicBoundary):
     def update_E(self):
-        """ Update electric field such that periodic boundary conditions in the
-        Y-direction apply """
+        """Update electric field such that periodic boundary conditions in the
+        Y-direction apply"""
         self.grid.E[:, 0, :, :] = self.grid.E[:, -1, :, :]
 
     def update_H(self):
-        """ Update magnetic field such that periodic boundary conditions in the
-        Y-direction apply """
+        """Update magnetic field such that periodic boundary conditions in the
+        Y-direction apply"""
         self.grid.H[:, -1, :, :] = self.grid.H[:, 0, :, :]
 
 
 # Periodic Boundaries in the Z-direction
 class _PeriodicBoundaryZ(PeriodicBoundary):
     def update_E(self):
-        """ Update electric field such that periodic boundary conditions in the
-        Z-direction apply """
+        """Update electric field such that periodic boundary conditions in the
+        Z-direction apply"""
         self.grid.E[:, :, 0, :] = self.grid.E[:, :, -1, :]
 
     def update_H(self):
-        """ Update magnetic field such that periodic boundary conditions in the
-        Z-direction apply """
+        """Update magnetic field such that periodic boundary conditions in the
+        Z-direction apply"""
         self.grid.H[:, :, -1, :] = self.grid.H[:, :, 0, :]
 
 
@@ -211,7 +211,7 @@ class _PeriodicBoundaryZ(PeriodicBoundary):
 
 
 class PML(Boundary):
-    """ A perfectly matched layer (PML)
+    """A perfectly matched layer (PML)
 
     a PML is an impedence-matched area at the boundary of the grid for which
     all fields incident perpendicular to the area are absorbed without
@@ -225,7 +225,7 @@ class PML(Boundary):
     """
 
     def __init__(self, a: float = 1e-8, name: str = None):
-        """ Perfectly Matched Layer
+        """Perfectly Matched Layer
 
         Args:
             a: stability parameter
@@ -240,7 +240,7 @@ class PML(Boundary):
         self.a = a
 
     def _set_locations(self):
-        """ helper function
+        """helper function
 
         sets:
             self.loc: the location of the PML
@@ -251,7 +251,7 @@ class PML(Boundary):
         raise NotImplementedError
 
     def _set_shape(self):
-        """ helper function
+        """helper function
 
         sets:
             self.shape: the shape of the PML
@@ -259,7 +259,7 @@ class PML(Boundary):
         raise NotImplementedError
 
     def _set_sigmaE(self):
-        """ helper function
+        """helper function
 
         sets:
             self.sigmaE: the electric conductivity (responsible for the absorption) of
@@ -268,7 +268,7 @@ class PML(Boundary):
         raise NotImplementedError
 
     def _set_sigmaH(self):
-        """ helper function
+        """helper function
 
         sets:
             self.sigmaH: the magnetic conductivity (responsible for the absorption) of
@@ -277,7 +277,7 @@ class PML(Boundary):
         raise NotImplementedError
 
     def _sigma(self, vect: Tensorlike):
-        """ create a cubicly increasing profile for the conductivity """
+        """create a cubicly increasing profile for the conductivity"""
         return 40 * vect ** 3 / (self.thickness + 1) ** 4
 
     def _register_grid(
@@ -353,7 +353,7 @@ class PML(Boundary):
         raise ValueError("Invalid grid indexing used for boundary")
 
     def _calculate_parameters(self, thickness: int = 10):
-        """ Calculate the parameters for the PML
+        """Calculate the parameters for the PML
 
         Args:
             thickness=10: The thickness of the PML. The thickness can be specified as
@@ -395,7 +395,7 @@ class PML(Boundary):
         )
 
     def update_E(self):
-        """ Update electric field of the grid
+        """Update electric field of the grid
 
         Note:
             this method is called *after* the electric field is updated
@@ -407,7 +407,7 @@ class PML(Boundary):
         )
 
     def update_H(self):
-        """ Update magnetic field of the grid
+        """Update magnetic field of the grid
 
         Note:
             this method is called *after* the magnetic field is updated
@@ -419,7 +419,7 @@ class PML(Boundary):
         )
 
     def update_phi_E(self):
-        """ Update convolution [phi_E]
+        """Update convolution [phi_E]
 
         Note:
             this method is called *before* the electric field is updated
@@ -447,7 +447,7 @@ class PML(Boundary):
         self.phi_E[..., 2] = self.psi_Ez[..., 0] - self.psi_Ez[..., 1]
 
     def update_phi_H(self):
-        """ Update convolution [phi_H]
+        """Update convolution [phi_H]
 
         Note:
             this method is called *before* the magnetic field is updated
@@ -476,7 +476,7 @@ class PML(Boundary):
 
 
 class _PMLXlow(PML):
-    """ A perfectly matched layer to place where X is low. """
+    """A perfectly matched layer to place where X is low."""
 
     def _set_locations(self):
         self.loc = (slice(None, self.thickness), slice(None), slice(None), slice(None))
@@ -499,7 +499,7 @@ class _PMLXlow(PML):
 
 
 class _PMLXhigh(PML):
-    """ A perfectly matched layer to place where X is high. """
+    """A perfectly matched layer to place where X is high."""
 
     def _set_locations(self):
         self.loc = (slice(-self.thickness, None), slice(None), slice(None), slice(None))
@@ -522,7 +522,7 @@ class _PMLXhigh(PML):
 
 
 class _PMLYlow(PML):
-    """ A perfectly matched layer to place where Y is low. """
+    """A perfectly matched layer to place where Y is low."""
 
     def _set_locations(self):
         self.loc = (slice(None), slice(None, self.thickness), slice(None))
@@ -545,7 +545,7 @@ class _PMLYlow(PML):
 
 
 class _PMLYhigh(PML):
-    """ A perfectly matched layer to place where Y is high. """
+    """A perfectly matched layer to place where Y is high."""
 
     def _set_locations(self):
         self.loc = (slice(None), slice(-self.thickness, None), slice(None), slice(None))
@@ -568,7 +568,7 @@ class _PMLYhigh(PML):
 
 
 class _PMLZlow(PML):
-    """ A perfectly matched layer to place where Z is low. """
+    """A perfectly matched layer to place where Z is low."""
 
     def _set_locations(self):
         self.loc = (slice(None), slice(None), slice(None, self.thickness), slice(None))
@@ -591,7 +591,7 @@ class _PMLZlow(PML):
 
 
 class _PMLZhigh(PML):
-    """ A perfectly matched layer to place where Z is high. """
+    """A perfectly matched layer to place where Z is high."""
 
     def _set_locations(self):
         self.loc = (slice(None), slice(None), slice(-self.thickness, None), slice(None))
